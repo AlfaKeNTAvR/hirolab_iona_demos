@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- ============================ SETTINGS ============================= -->
+
+
+
+    <!-- If any of dependency or optional subfiles should not be launched (or
+    are launched separately) set corresponding argument to "false". -->
+    <arg 
+    name="launch_unity_ros" 
+    default="true"/>
+
+    <arg 
+    name="launch_active_neck" 
+    default="true"/>
+
+
+    <!-- ======================== END OF SETTINGS ========================== -->
+
+    <!-- Unity-ROS: -->
+    <group if="$(arg launch_unity_ros)">
+        <include 
+        file="$(find unity_ros)/launch/endpoint.launch">
+        </include>
+    </group>
+
+    <!-- Right Arm: -->
+    <!-- Oculus Mapping: -->
+    <include 
+        file="$(find kinova_positional_control)/launch/oculus_mapping.launch">
+            <arg 
+            name="robot_name" 
+            value="right_arm"/>
+            <arg 
+            name="controller_side" 
+            value="right"/>
+            <arg 
+            name="headset_mode" 
+            default="head"/>
+    </include>
+
+    <!-- Preset poses: -->
+    <include 
+        file="$(find kinova_positional_control)/launch/preset_poses.launch">
+            <arg 
+            name="robot_name" 
+            value="right_arm"/>
+    </include>
+
+    <!-- Left Arm: -->
+    <!-- Oculus Mapping: -->
+    <include 
+        file="$(find kinova_positional_control)/launch/oculus_mapping.launch">
+            <arg 
+            name="robot_name" 
+            value="left_arm"/>
+            <arg 
+            name="controller_side" 
+            value="left"/>
+            <arg 
+            name="headset_mode" 
+            default="head"/>
+    </include>
+
+    <!-- Preset poses: -->
+    <include 
+        file="$(find kinova_positional_control)/launch/preset_poses.launch">
+            <arg 
+            name="robot_name" 
+            value="left_arm"/>
+    </include>
+
+    <!-- Mobile Base Oculus Mapping: -->
+    <include 
+        file="$(find hirolab_fetch_freight100)/launch/oculus_mobile_base_mapping.launch">
+            <arg 
+            name="controller_side" 
+            value="right"/>
+            <arg 
+            name="launch_controller_feedback" 
+            value="false"/>
+    </include>
+
+    <!-- Chest Oculus Mapping: -->
+    <include 
+        file="$(find gopher_ros_clearcore)/launch/oculus_joystick_mapping.launch">
+            <arg 
+            name="controller_side" 
+            value="left"/>
+            <arg
+            name='launch_controller_feedback'
+            value='false'/>
+    </include>
+
+    <!-- Active neck: -->
+    <group if="$(arg launch_active_neck)">
+        <include 
+        file="$(find active_neck)/launch/active_neck.launch">
+            <arg 
+            name="launch_headset_feedback" 
+            value="true"/>
+        </include>
+    </group>
+</launch>
