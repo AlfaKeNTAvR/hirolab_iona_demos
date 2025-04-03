@@ -26,6 +26,7 @@ from std_msgs.msg import (
 from sensor_msgs.msg import (Image)
 
 # # Third party messages and services:
+from kortex_driver.msg import (BaseCyclic_Feedback)
 
 
 class ControlMenu:
@@ -74,6 +75,16 @@ class ControlMenu:
             'right_arm': 0.0,
             'left_arm': 0.0,
         }
+        self.__kinova_fault_state = {
+            'right_arm': False,
+            'left_arm': False,
+        }
+
+        self.__black_color = (0, 0, 0)
+        self.__green_color = (0, 255, 0)
+        self.__orange_color = (0, 140, 255)
+        self.__red_color = (0, 0, 255)
+        self.__purple_color = (255, 0, 255)
 
         # # Public variables:
 
@@ -147,6 +158,11 @@ class ControlMenu:
             Float64,
             self.__right_arm_trajectory_fraction_callback,
         )
+        rospy.Subscriber(
+            '/right_arm/base_feedback',
+            BaseCyclic_Feedback,
+            self.__right_base_feedback_callback,
+        )
 
         rospy.Subscriber(
             '/left_arm/teleoperation/is_tracking',
@@ -172,6 +188,11 @@ class ControlMenu:
             '/left_arm/preset_poses/trajectory_fraction',
             Float64,
             self.__left_arm_trajectory_fraction_callback,
+        )
+        rospy.Subscriber(
+            '/left_arm/base_feedback',
+            BaseCyclic_Feedback,
+            self.__left_base_feedback_callback,
         )
 
         # # Timers:
@@ -229,7 +250,7 @@ class ControlMenu:
 
         """
 
-        self.__is_full_mode['right_arm'] = message.data
+        self.__is_full_mode['right_arm'] = not message.data
 
     def __right_arm_preset_pose_mode_callback(self, message):
         """
@@ -252,6 +273,17 @@ class ControlMenu:
 
         self.__trajectory_fraction['right_arm'] = message.data
 
+    def __right_base_feedback_callback(self, message: BaseCyclic_Feedback):
+        """
+        
+        """
+
+        if message.base.fault_bank_a != 0:
+            self.__kinova_fault_state['right_arm'] = True
+
+        else:
+            self.__kinova_fault_state['right_arm'] = False
+
     def __left_arm_is_tracking_callback(self, message):
         """
         
@@ -264,7 +296,7 @@ class ControlMenu:
 
         """
 
-        self.__is_full_mode['left_arm'] = message.data
+        self.__is_full_mode['left_arm'] = not message.data
 
     def __left_arm_preset_pose_mode_callback(self, message):
         """
@@ -286,6 +318,17 @@ class ControlMenu:
         """
 
         self.__trajectory_fraction['left_arm'] = message.data
+
+    def __left_base_feedback_callback(self, message: BaseCyclic_Feedback):
+        """
+        
+        """
+
+        if message.base.fault_bank_a != 0:
+            self.__kinova_fault_state['left_arm'] = True
+
+        else:
+            self.__kinova_fault_state['left_arm'] = False
 
     # # Timer callbacks:
 
@@ -365,7 +408,7 @@ class ControlMenu:
         """
 
         original_width = 640
-        new_width = 1280
+        new_width = 1920
         padding_width = (new_width - original_width) // 2
 
         # Add padding to the sides
@@ -379,38 +422,103 @@ class ControlMenu:
             value=[255, 255, 255],
         )
 
-        # Helper function to get color based on status
-        def get_color(condition):
-            return (0, 255, 0) if condition else (
-                0, 0, 0
-            )  # Green for True, Red for False
-
         # Right Arm text and colors
-        text_start_x = original_width + 370  # Start position for the text on the right
-        text_start_y = 150  # Initial y-position
+        text_start_x = 1300  # Start position for the text on the right
+        text_start_y = 50  # Initial y-position
         line_spacing = 40  # Space between each line
 
         right_arm_text_lines = [
-            ("Right Arm", (0, 0, 0)),  # Title in black
             (
-                f"Tracking: {'ON' if self.__is_tracking['right_arm'] else 'OFF'}",
-                get_color(self.__is_tracking['right_arm'])
+                "Right Arm",
+                self.__black_color,
             ),
             (
-                f"PosOnly: {'ON' if self.__is_full_mode['right_arm'] else 'OFF'}",
-                get_color(self.__is_full_mode['right_arm'])
-            ),
-            (
-                f"PrePose: {'ON' if self.__preset_pose_mode['right_arm'] else 'OFF'}",
-                get_color(self.__preset_pose_mode['right_arm'])
-            ),
-            (f"PrePose: {self.__preset_pose['right_arm']}",
-             (0, 0, 0)),  # Always black for pose name
-            (
-                f"TrajFrac: {self.__trajectory_fraction['right_arm']:.2f}",
-                get_color(self.__trajectory_fraction['right_arm'] == 1.0)
+                f"",
+                self.__black_color,
             ),
         ]
+
+        if self.__kinova_fault_state['right_arm']:
+            right_arm_text_lines.append(
+                (
+                    f"In FAULT state!",
+                    self.__red_color,
+                )
+            ),
+            right_arm_text_lines.append(
+                (
+                    f"Long press (B) to reset.",
+                    self.__red_color,
+                )
+            ),
+
+        elif self.__preset_pose_mode['right_arm']:
+            right_arm_text_lines.append(
+                (
+                    f"Press (A) - next.",
+                    self.__black_color,
+                )
+            )
+            right_arm_text_lines.append(
+                (
+                    f"Press (B) - previous.",
+                    self.__black_color,
+                )
+            )
+            right_arm_text_lines.append(
+                (
+                    f"Long press (A) to confirm.",
+                    self.__black_color,
+                )
+            )
+            right_arm_text_lines.append((
+                f"",
+                self.__black_color,
+            ))
+
+            if self.__preset_pose['right_arm'] in [
+                'front_xy',
+                'front_xz',
+                'top_xz',
+                'top_yz',
+                'side_yx',
+                'side_yz',
+            ]:
+                image = cv2.imread(
+                    f"/home/fetch/catkin_workspaces/iona_devel_ws/src/hirolab_iona_demos/images/{self.__preset_pose['right_arm']}_200x200.jpg"
+                )
+
+                image = cv2.resize(image, (200, 200))
+
+                padded_image[250:450, 1300:1500] = image
+
+            else:
+                right_arm_text_lines.append(
+                    (
+                        f"{self.__preset_pose['right_arm']}",
+                        self.__orange_color,
+                    )
+                )
+
+        else:
+            right_arm_text_lines.append(
+                (
+                    f"Tracking: {'ON.' if self.__is_tracking['right_arm'] else 'OFF.'}",
+                    (
+                        self.__orange_color if self.__is_tracking['right_arm']
+                        else self.__black_color
+                    ),
+                )
+            )
+            right_arm_text_lines.append(
+                (
+                    f"Mode: {'with rotation.' if self.__is_full_mode['right_arm'] else 'position only.'}",
+                    (
+                        self.__orange_color if self.__is_full_mode['right_arm']
+                        else self.__black_color
+                    ),
+                )
+            )
 
         # Add each line for the right arm
         for i, (line, color) in enumerate(right_arm_text_lines):
@@ -427,30 +535,103 @@ class ControlMenu:
             )
 
         # Left Arm text and colors
-        text_start_x = original_width - 600  # Start position for the text on the left
-        text_start_y = 150  # Initial y-position
+        text_start_x = 200  # Start position for the text on the left
+        text_start_y = 50  # Initial y-position
 
         left_arm_text_lines = [
-            ("Left Arm", (0, 0, 0)),  # Title in black
             (
-                f"Tracking: {'ON' if self.__is_tracking['left_arm'] else 'OFF'}",
-                get_color(self.__is_tracking['left_arm'])
+                "Left Arm",
+                self.__black_color,
             ),
             (
-                f"PosOnly: {'ON' if self.__is_full_mode['left_arm'] else 'OFF'}",
-                get_color(self.__is_full_mode['left_arm'])
-            ),
-            (
-                f"PrePose: {'ON' if self.__preset_pose_mode['left_arm'] else 'OFF'}",
-                get_color(self.__preset_pose_mode['left_arm'])
-            ),
-            (f"PrePose: {self.__preset_pose['left_arm']}",
-             (0, 0, 0)),  # Always black for pose name
-            (
-                f"TrajFrac: {self.__trajectory_fraction['left_arm']:.2f}",
-                get_color(self.__trajectory_fraction['left_arm'] == 1.0)
+                f"",
+                self.__black_color,
             ),
         ]
+
+        if self.__kinova_fault_state['left_arm']:
+            left_arm_text_lines.append(
+                (
+                    f"In FAULT state!",
+                    self.__red_color,
+                )
+            ),
+            left_arm_text_lines.append(
+                (
+                    f"Long press (Y) to reset.",
+                    self.__red_color,
+                )
+            ),
+
+        elif self.__preset_pose_mode['left_arm']:
+            left_arm_text_lines.append(
+                (
+                    f"Press (X) - next.",
+                    self.__black_color,
+                )
+            )
+            left_arm_text_lines.append(
+                (
+                    f"Press (Y) - previous.",
+                    self.__black_color,
+                )
+            )
+            left_arm_text_lines.append(
+                (
+                    f"Long press (X) to confirm.",
+                    self.__black_color,
+                )
+            )
+            left_arm_text_lines.append((
+                f"",
+                self.__black_color,
+            ))
+
+            if self.__preset_pose['left_arm'] in [
+                'front_xy',
+                'front_xz',
+                'top_xz',
+                'top_yz',
+                'side_yx',
+                'side_yz',
+            ]:
+                image = cv2.imread(
+                    f"/home/fetch/catkin_workspaces/iona_devel_ws/src/hirolab_iona_demos/images/{self.__preset_pose['left_arm']}_200x200.jpg"
+                )
+                image = cv2.resize(image, (200, 200))
+
+                if self.__preset_pose['left_arm'] in ['side_yx', 'side_yz']:
+                    image = cv2.flip(image, 1)
+
+                padded_image[250:450, 400:600] = image
+
+            else:
+                left_arm_text_lines.append(
+                    (
+                        f"{self.__preset_pose['left_arm']}",
+                        self.__orange_color,
+                    )
+                )
+
+        else:
+            left_arm_text_lines.append(
+                (
+                    f"Tracking: {'ON.' if self.__is_tracking['left_arm'] else 'OFF.'}",
+                    (
+                        self.__orange_color if self.__is_tracking['left_arm']
+                        else self.__black_color
+                    ),
+                )
+            )
+            left_arm_text_lines.append(
+                (
+                    f"Mode: {'with rotation.' if self.__is_full_mode['left_arm'] else 'position only.'}",
+                    (
+                        self.__orange_color if self.__is_full_mode['left_arm']
+                        else self.__black_color
+                    ),
+                )
+            )
 
         # Add each line for the left arm
         for i, (line, color) in enumerate(left_arm_text_lines):
