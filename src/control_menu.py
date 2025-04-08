@@ -79,12 +79,16 @@ class ControlMenu:
             'right_arm': False,
             'left_arm': False,
         }
+        self.__pid_enabled = {
+            'right_arm': False,
+            'left_arm': False,
+        }
 
         self.__black_color = (0, 0, 0)
         self.__green_color = (0, 255, 0)
         self.__orange_color = (0, 140, 255)
         self.__red_color = (0, 0, 255)
-        self.__purple_color = (255, 0, 255)
+        self.__cyan_color = (255, 255, 0)
 
         # # Public variables:
 
@@ -163,6 +167,11 @@ class ControlMenu:
             BaseCyclic_Feedback,
             self.__right_base_feedback_callback,
         )
+        rospy.Subscriber(
+            '/right_arm/joints_control/pid_enabled',
+            Bool,
+            self.__right_pid_enabled_callback,
+        )
 
         rospy.Subscriber(
             '/left_arm/teleoperation/is_tracking',
@@ -193,6 +202,11 @@ class ControlMenu:
             '/left_arm/base_feedback',
             BaseCyclic_Feedback,
             self.__left_base_feedback_callback,
+        )
+        rospy.Subscriber(
+            '/left_arm/joints_control/pid_enabled',
+            Bool,
+            self.__left_pid_enabled_callback,
         )
 
         # # Timers:
@@ -284,6 +298,13 @@ class ControlMenu:
         else:
             self.__kinova_fault_state['right_arm'] = False
 
+    def __right_pid_enabled_callback(self, message):
+        """
+        
+        """
+
+        self.__pid_enabled['right_arm'] = message.data
+
     def __left_arm_is_tracking_callback(self, message):
         """
         
@@ -329,6 +350,13 @@ class ControlMenu:
 
         else:
             self.__kinova_fault_state['left_arm'] = False
+
+    def __left_pid_enabled_callback(self, message):
+        """
+        
+        """
+
+        self.__pid_enabled['left_arm'] = message.data
 
     # # Timer callbacks:
 
@@ -471,10 +499,20 @@ class ControlMenu:
                     self.__black_color,
                 )
             )
-            right_arm_text_lines.append((
-                f"",
-                self.__black_color,
-            ))
+
+            if self.__pid_enabled['right_arm']:
+                right_arm_text_lines.append((
+                    f"",
+                    self.__black_color,
+                ))
+
+            else:
+                right_arm_text_lines.append(
+                    (
+                        f"Moving to the pose...",
+                        self.__cyan_color,
+                    )
+                )
 
             if self.__preset_pose['right_arm'] in [
                 'none',
@@ -586,10 +624,20 @@ class ControlMenu:
                     self.__black_color,
                 )
             )
-            left_arm_text_lines.append((
-                f"",
-                self.__black_color,
-            ))
+
+            if self.__pid_enabled['left_arm']:
+                left_arm_text_lines.append((
+                    f"",
+                    self.__black_color,
+                ))
+
+            else:
+                left_arm_text_lines.append(
+                    (
+                        f"Moving to the pose...",
+                        self.__cyan_color,
+                    )
+                )
 
             if self.__preset_pose['left_arm'] in [
                 'none',
