@@ -477,12 +477,16 @@ class ControlMenu:
             ))
 
             if self.__preset_pose['right_arm'] in [
+                'none',
+                'home',
                 'front_xy',
                 'front_xz',
                 'top_xz',
                 'top_yz',
                 'side_yx',
                 'side_yz',
+                'side',
+                'narrow',
             ]:
                 image = cv2.imread(
                     f"/home/fetch/catkin_workspaces/iona_devel_ws/src/hirolab_iona_demos/images/{self.__preset_pose['right_arm']}_200x200.jpg"
@@ -588,19 +592,27 @@ class ControlMenu:
             ))
 
             if self.__preset_pose['left_arm'] in [
+                'none',
+                'home',
                 'front_xy',
                 'front_xz',
                 'top_xz',
                 'top_yz',
                 'side_yx',
                 'side_yz',
+                'side',
+                'narrow',
             ]:
                 image = cv2.imread(
                     f"/home/fetch/catkin_workspaces/iona_devel_ws/src/hirolab_iona_demos/images/{self.__preset_pose['left_arm']}_200x200.jpg"
                 )
                 image = cv2.resize(image, (200, 200))
 
-                if self.__preset_pose['left_arm'] in ['side_yx', 'side_yz']:
+                if self.__preset_pose['left_arm'] in [
+                    'side_yx',
+                    'side_yz',
+                    'narrow',
+                ]:
                     image = cv2.flip(image, 1)
 
                 padded_image[250:450, 400:600] = image
