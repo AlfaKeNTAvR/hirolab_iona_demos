@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- ============================ SETTINGS ============================= -->
+
+
+    <!-- If any of dependency or optional subfiles should not be launched (or
+    are launched separately) set corresponding argument to "false". -->
+    <arg 
+    name="camera_launch" 
+    default="true"/>
+
+    <arg 
+    name="active_neck_launch" 
+    default="true"/>
+
+    <!-- ======================== END OF SETTINGS ========================== -->
+
+    <!-- Active neck: -->
+    <group if="$(arg active_neck_launch)">
+        <include 
+        file="$(find active_neck)/launch/active_neck.launch">
+            <arg 
+            name="launch_headset_feedback" 
+            value="true"/>
+        </include>
+    </group>
+
+
+    <!-- Camera and UDP: -->
+    <group if="$(arg camera_launch)">
+        <include 
+        file="$(find realsense2_camera)/launch/rs_camera.launch">
+            <arg 
+            name="camera" 
+            value="active_neck"/>
+            <arg 
+            name="serial_no" 
+            value="920312070370"/>
+            <arg 
+            name="color_fps" 
+            value="30"/>
+            <arg 
+            name="color_width" 
+            value="640"/>
+            <arg 
+            name="color_height" 
+            value="480"/>   
+        </include>
+
+        <!-- Launch the UDP Streamer: -->
+        <node pkg="udp_ros" type="camera_streamer_node" name="camera_streamer_node_neck" output="screen">
+            <param name="camera_name" value="active_neck" />
+            <param name="fps" value="30" />
+            <param name="width" value="640" />
+            <param name="height" value="480" />
+            <param name="jpeg_quality" value="75" />
+        </node>
+    </group>
+
+    <!-- WiFi Strength indicator: -->
+    <node pkg="hirolab_iona_demos" type="wifi.py" name="wifi_node" output="screen" />
+</launch>
