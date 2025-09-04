@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Align bedhead_panel with base_link: -->
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="bedhead_panel_shim_broadcaster" 
+    args="-0.015 0 0 3.14 0 0 bedhead_panel bedhead_panel_base" 
+    />
+
+    <!-- Left socket broadcaster: -->
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="left_socket_broadcaster" 
+    args="-0.065 0.155 -0.102 0 0 0 bedhead_panel_base left_socket"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="left_socket_zone_broadcaster" 
+    args="-0.15 0 0 0 0 0 left_socket left_socket_zone"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="left_socket_calibration_broadcaster" 
+    args="-0.075 0 0 0 0 0 left_socket left_socket_calibration"
+    />
+
+    <!-- Right socket broadcaster: -->
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="right_socket_broadcaster" 
+    args="-0.065 -0.340 -0.102 0 0 0 bedhead_panel_base right_socket"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="right_socket_zone_broadcaster" 
+    args="-0.15 0 0 0 0 0 right_socket right_socket_zone"
+    />
+
+    <!-- EE plug tip: -->
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="right_plug_broadcaster" 
+    args="0 0 0.18 0 0 0 right_arm/end_effector_link right_arm/plug_tip"
+    />
+
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="left_plug_broadcaster" 
+    args="0 0 0.18 0 0 0 left_arm/end_effector_link left_arm/plug_tip"
+    />
+
+    <!-- Starting point: -->
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="start_point_broadcaster" 
+    args="-0.4 0 -0.102 0 0 0 bedhead_panel_base start_point"
+    />
+
+    <!-- Center point: -->
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="center_point_broadcaster" 
+    args="0 -0.2475 0 0 0 0 left_socket center_point"
+    />
+</launch>
