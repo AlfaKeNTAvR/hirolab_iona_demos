@@ -6,10 +6,6 @@
     <!-- If any of dependency or optional subfiles should not be launched (or
     are launched separately) set corresponding argument to "false". -->
     <arg 
-    name="unity_ros_launch" 
-    default="true"/>
-
-    <arg 
     name="right_arm_launch" 
     default="true"/>
 
@@ -19,17 +15,10 @@
 
     <!-- ======================== END OF SETTINGS ========================== -->
 
-    <!-- Unity-ROS: -->
-    <group if="$(arg unity_ros_launch)">
-        <include 
-        file="$(find unity_ros)/launch/endpoint.launch">
-        </include>
-    </group>
-
     <!-- Right Arm: -->
     <group if="$(arg right_arm_launch)">
         <include file="$(find kortex_driver)/launch/kortex_driver.launch">
-            <arg name="ip_address" value="192.168.1.12" />
+            <arg name="ip_address" value="192.168.1.10" />
             <arg name="start_rviz" value="false" />
             <arg name="start_moveit" value="true" />
             <arg name="gripper" value="robotiq_2f_85" />
@@ -42,7 +31,7 @@
     <!-- Left Arm: -->
     <group if="$(arg left_arm_launch)">
         <include file="$(find kortex_driver)/launch/kortex_driver.launch">
-            <arg name="ip_address" value="192.168.1.10" />
+            <arg name="ip_address" value="192.168.1.11" />
             <arg name="start_rviz" value="false" />
             <arg name="start_moveit" value="true" />
             <arg name="gripper" value="robotiq_2f_85" />
@@ -51,4 +40,13 @@
             <arg name="prefix" value="left_arm/" />
         </include>
     </group>
+
+    <!-- Launch the UDP Streamer: -->
+    <node pkg="udp_ros" type="camera_streamer_node" name="camera_streamer_node_neck" output="screen">
+        <param name="camera_name" value="active_neck" />
+        <param name="fps" value="30" />
+        <param name="width" value="640" />
+        <param name="height" value="480" />
+        <param name="jpeg_quality" value="75" />
+    </node>
 </launch>

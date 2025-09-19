@@ -6,6 +6,10 @@
     <!-- If any of dependency or optional subfiles should not be launched (or
     are launched separately) set corresponding argument to "false". -->
     <arg 
+    name="unity_ros_launch" 
+    default="true"/>
+
+    <arg 
     name="camera_launch" 
     default="true"/>
 
@@ -14,6 +18,14 @@
     default="true"/>
 
     <!-- ======================== END OF SETTINGS ========================== -->
+
+    <!-- Unity-ROS: -->
+    <group if="$(arg unity_ros_launch)">
+        <include 
+        file="$(find unity_ros)/launch/endpoint.launch">
+        </include>
+    </group>
+
 
     <!-- Active neck: -->
     <group if="$(arg active_neck_launch)">
@@ -44,17 +56,11 @@
             value="640"/>
             <arg 
             name="color_height" 
-            value="480"/>   
+            value="480"/> 
+            <!-- <arg 
+            name="publish_tf" 
+            value="true"/>  -->
         </include>
-
-        <!-- Launch the UDP Streamer: -->
-        <node pkg="udp_ros" type="camera_streamer_node" name="camera_streamer_node_neck" output="screen">
-            <param name="camera_name" value="active_neck" />
-            <param name="fps" value="30" />
-            <param name="width" value="640" />
-            <param name="height" value="480" />
-            <param name="jpeg_quality" value="75" />
-        </node>
     </group>
 
     <!-- WiFi Strength indicator: -->
