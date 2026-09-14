@@ -37,6 +37,14 @@
         </include>
     </group>
 
+    <!-- Attach active neck: -->
+    <node 
+    pkg="tf2_ros" 
+    type="static_transform_publisher" 
+    name="left_arm_mount_broadcaster" 
+    args="0 0 0 0 0 0 torso_top_plate active_neck/base_link"
+    />
+
 
     <!-- Camera and UDP: -->
     <group if="$(arg camera_launch)">
@@ -47,7 +55,7 @@
             value="active_neck"/>
             <arg 
             name="serial_no" 
-            value="920312070370"/>
+            value="243322070257"/>
             <arg 
             name="color_fps" 
             value="30"/>

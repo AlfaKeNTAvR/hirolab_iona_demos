@@ -54,12 +54,12 @@
         </include>
 
         <!-- Wrench: -->
-        <include 
+        <!-- <include 
             file="$(find kinova_positional_control)/launch/kinova_wrench.launch">
                 <arg 
                 name="robot_name" 
                 value="right_arm"/>
-        </include>
+        </include> -->
     </group>
 
     <!-- Left Arm: -->
@@ -87,12 +87,12 @@
         </include>
 
         <!-- Wrench: -->
-        <include 
+        <!-- <include 
             file="$(find kinova_positional_control)/launch/kinova_wrench.launch">
                 <arg 
                 name="robot_name" 
                 value="left_arm"/>
-        </include>
+        </include> -->
     </group>
 
     <!-- Mobile Base Oculus Mapping: -->
