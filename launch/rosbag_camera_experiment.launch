@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- ============================ SETTINGS ============================= -->
+  <!-- Mode/camera indices used in rosbag file naming -->
+  <arg name="mode_ix" default="1"/>
+  <arg name="participant_ix" default="1"/>
+  <arg name="camera_ix" default="1"/>
+  <!-- Image topics to record -->
+  <arg name="image_topic_1" default="/block_detector/image"/>
+  <arg name="image_topic_2" default="/box_camera/camera/color/image_raw/compressed"/>
+  <!-- ======================== END OF SETTINGS ========================== -->
+
+  <!-- ================================================================== -->
+  <!-- Rosbag (full - with the two desired image topics only)             -->
+  <!-- ================================================================== -->
+  <node
+    pkg="rosbag"
+    type="record"
+    name="rosbag_general"
+    output="screen"
+    args="
+      /tf
+      /right_arm/base_feedback
+      /right_arm/base_feedback/joint_state
+      /right_arm/fault_state
+      /right_arm/gripper_control/position_feedback
+      /right_arm/gripper_control/velocity_feedback
+      /right_arm/kinova_wrench/wrench_raw
+      /right_arm/kinova_wrench/wrench_processed
+
+      /chest_logger/current_position
+      /chest_logger/current_velocity
+
+      /rightControllerInfo
+      /right/controller_feedback/buttons
+      /right/controller_feedback/joystick
+      /right/controller_feedback/pose
+
+      /right_arm/relaxed_ik/ee_pose_goals
+      /right_arm/teleoperation/is_tracking
+      /right_arm/teleoperation/position_only
+      /right_arm/oculus_mapping/menu_type
+      /right_arm/oculus_mapping/preset_pose_mode
+      /right_arm/oculus_mapping/preset_pose
+      /right_arm/oculus_mapping/preset_pose/executing
+
+      $(arg image_topic_1)
+      $(arg image_topic_2)
+
+      /tobii/combined/direction
+      /tobii/combined/origin
+      /tobii/combined/timestamp
+      /tobii/combined/valid
+      /tobii/left_eye/gaze_origin_trackbox
+      /tobii/left_eye/gaze_origin_user
+      /tobii/left_eye/gaze_origin_valid
+      /tobii/left_eye/gaze_point_screen
+      /tobii/left_eye/gaze_point_user
+      /tobii/left_eye/gaze_point_valid
+      /tobii/left_eye/gaze_ray_direction
+      /tobii/left_eye/pupil_diameter
+      /tobii/left_eye/pupil_valid
+      /tobii/right_eye/gaze_origin_trackbox
+      /tobii/right_eye/gaze_origin_user
+      /tobii/right_eye/gaze_origin_valid
+      /tobii/right_eye/gaze_point_screen
+      /tobii/right_eye/gaze_point_user
+      /tobii/right_eye/gaze_point_valid
+      /tobii/right_eye/gaze_ray_direction
+      /tobii/right_eye/pupil_diameter
+      /tobii/right_eye/pupil_valid
+
+      /gaze/confidence/green
+      /gaze/confidence/red
+      /gaze/confidence/hand
+      /block_detector/green
+      /block_detector/red
+      /block_detector/hand
+      /main_camera/eye_hit_location
+      -o /media/fetch/T7/bagfiles/p$(arg participant_ix)_m$(arg mode_ix)_c$(arg camera_ix)
+    ">
+  </node>
+</launch>

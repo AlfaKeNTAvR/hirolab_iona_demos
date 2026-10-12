@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- ============================ SETTINGS ============================= -->
+    <!-- <arg 
+    name="image_frequency" 
+    default="15"/> -->
+
+    <arg 
+    name="participant_ix" 
+    default="1"/>
+
+    <arg 
+    name="mode_ix" 
+    default="1"/>
+
+    <arg 
+    name="trial_ix" 
+    default="1"/>
+
+    <!-- Set parameters from args: -->
+    <param
+    name="participant_ix" 
+    value="$(arg participant_ix)" 
+    type="int"/>
+
+    <param 
+    name="mode_ix" 
+    value="$(arg mode_ix)" 
+    type="int"/>
+
+    <param 
+    name="trial_ix" 
+    value="$(arg trial_ix)" 
+    type="int"/>
+
+
+    <!-- ======================== END OF SETTINGS ========================== -->
+
+    <!-- Reduce Image Publishing frequency: -->
+    <!-- <node 
+    pkg="topic_tools" 
+    type="throttle" 
+    name="head_camera_throttle" 
+    output="screen" 
+    args="messages /active_neck/color/image_raw $(arg image_frequency)"
+    />
+
+    <node 
+    pkg="topic_tools" 
+    type="throttle" 
+    name="camera1_throttle" 
+    output="screen" 
+    args="messages /camera1/camera/color/image_raw/compressed $(arg image_frequency)"
+    />
+
+    <node 
+    pkg="topic_tools" 
+    type="throttle" 
+    name="camera2_throttle" 
+    output="screen" 
+    args="messages /camera2/camera/color/image_raw/compressed $(arg image_frequency)"
+    /> -->
+
+    
+    <!-- Rosbag (full): -->
+    <node 
+    pkg="rosbag" 
+    type="record" 
+    name="rosbag_general"
+    output="screen"
+    args="
+    /tf
+    /right_arm/base_feedback
+    /right_arm/base_feedback/joint_state
+    /right_arm/fault_state
+    /right_arm/gripper_control/position_feedback
+    /right_arm/gripper_control/velocity_feedback
+    /right_arm/kinova_wrench/wrench_raw
+    /right_arm/kinova_wrench/wrench_processed
+
+    /chest_logger/current_position
+    /chest_logger/current_velocity
+
+    /battery_state
+    /base_controller/command
+    /oculus_mobile_base_mapping/control_mode
+
+    /pitch_motor_pid/state
+    /yaw_motor_pid/state
+
+    /camera/hmd_main
+    /active_neck/color/image_raw
+
+    /headset_feedback/pose
+
+    /rightControllerInfo
+    /right/controller_feedback/buttons
+    /right/controller_feedback/joystick
+    /right/controller_feedback/pose
+
+    /right_arm/relaxed_ik/ee_pose_goals
+    /right_arm/teleoperation/is_tracking
+    /right_arm/teleoperation/position_only
+    /right_arm/oculus_mapping/menu_type
+    /right_arm/oculus_mapping/preset_pose_mode
+    /right_arm/oculus_mapping/preset_pose
+    /right_arm/oculus_mapping/preset_pose/executing
+
+    /audio
+    /audio/audio_stamped
+
+    /task/state
+    /falconPos_conveted
+
+    -o /media/fetch/T7/bagfiles/p$(arg participant_ix)_m$(arg mode_ix)_t$(arg trial_ix)
+    ">
+    </node>      
+</launch>

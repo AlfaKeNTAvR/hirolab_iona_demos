@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- ============================ SETTINGS ============================= -->
+    <!-- <arg 
+    name="image_frequency" 
+    default="15"/> -->
+
+    <arg 
+    name="scenario_ix" 
+    default="1"/>
+
+    <arg 
+    name="participant_ix" 
+    default="1"/>
+
+
+    <!-- ======================== END OF SETTINGS ========================== -->
+
+    <!-- Reduce Image Publishing frequency: -->
+    <!-- <node 
+    pkg="topic_tools" 
+    type="throttle" 
+    name="head_camera_throttle" 
+    output="screen" 
+    args="messages /active_neck/color/image_raw $(arg image_frequency)"
+    />
+
+    <node 
+    pkg="topic_tools" 
+    type="throttle" 
+    name="camera1_throttle" 
+    output="screen" 
+    args="messages /camera1/camera/color/image_raw/compressed $(arg image_frequency)"
+    />
+
+    <node 
+    pkg="topic_tools" 
+    type="throttle" 
+    name="camera2_throttle" 
+    output="screen" 
+    args="messages /camera2/camera/color/image_raw/compressed $(arg image_frequency)"
+    /> -->
+
+    
+    <!-- Rosbag (full): -->
+    <node 
+    pkg="rosbag" 
+    type="record" 
+    name="rosbag_general"
+    output="screen"
+    args="
+    /gaze/image/compressed
+/gaze/left_eye_direction
+/gaze/left_eye_origin
+/gaze/left_eye_pupil
+/gaze/pixel_coordinates
+/gaze/right_eye_direction
+/gaze/right_eye_origin
+/gaze/right_eye_pupil
+
+    /audio
+    /audio/audio_stamped
+
+    -o /media/fetch/T7/bagfiles/p$(arg participant_ix)_s$(arg scenario_ix)_gaze
+    ">
+    </node>    
+
+</launch>

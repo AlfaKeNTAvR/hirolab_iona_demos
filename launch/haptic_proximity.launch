@@ -1,0 +1,196 @@
+<launch>
+  <!-- ══════════════════════════════════════════════════════════════════════
+       haptic_proximity.launch
+       ══════════════════════════════════════════════════════════════════════
+
+       Drives the bHaptics TactSuit Pro via the cylindrical density grid.
+       The vest is modelled as floating above base_link at vest_z_offset,
+       with sense rays projected radially outward from each tactor.
+
+       QUICK START
+       # With density grid already running (debug:=true required):
+       roslaunch haptic_proximity haptic_proximity.launch
+
+       # Full stack from scratch:
+       roslaunch cylindrical_grid_viz cylindrical_grid.launch debug:=true &
+       roslaunch haptic_proximity haptic_proximity.launch
+
+       FOXGLOVE 3D PANE SETUP
+       Add → MarkerArray → /haptic_proximity/ray_markers
+         - Green lines = no approach / receding / steady-state (silent)
+         - Red lines   = fast approach (full intensity)
+         - White rings = vest tactor row positions
+       Also recommended:
+         Add → PointCloud → /cylindrical_grid/density_cloud
+           Color by: intensity  |  Colormap: Turbo  |  Point size: 0.4m
+
+       SMOOTHING PIPELINE (four stages — tune in order if buzz persists)
+       ══════════════════════════════════════════════════════════════════
+       Stage 1  dist_ema_alpha
+           EMA on raw distance BEFORE any derivative is computed.
+           This is the primary fix for shell-boundary quantisation noise:
+           a stationary obstacle that straddles two grid shells appears to
+           oscillate by one shell width every frame, producing a spurious
+           velocity.  Lower values → heavier smoothing → better steady-state
+           silence.  Trade-off: slightly slower distance tracking.
+           If you still get false buzz with a static obstacle, lower this
+           first (try 0.10).
+
+       Stage 2  dist_outlier_zscore
+           IQR-based outlier clamping inside the OLS derivative window.
+           Any sample that deviates more than zscore×IQR from the window
+           median is replaced with the median before the slope is fitted.
+           Kills single-frame drop-outs (ray briefly returns ray_range and
+           recovers) that slip through Stage 1.  Set to 0 to disable.
+
+       Stage 3  rate_attack_alpha / rate_release_alpha
+           Asymmetric EMA on the approach-rate signal.
+           Attack (fast): how quickly buzzing starts when something closes in.
+           Release (slow): how gradually buzzing fades when the rate drops.
+           A slow release prevents the choppy "drops out for one frame"
+           artefact when the derivative estimate dips transiently.
+
+       Stage 4  approach_rate_threshold_on / approach_rate_threshold_off
+           Schmitt-trigger (hysteretic) noise gate.
+           Buzzing starts only when smoothed rate exceeds threshold_on,
+           and continues until it falls below threshold_off.
+           threshold_off MUST be < threshold_on or the node will auto-correct.
+           Wider gap → more hysteresis → less chatter at the boundary.
+
+       SYMPTOM → PARAMETER MAP
+       ─────────────────────────────────────────────────────────────────────
+       Still buzzing at steady state
+           → lower  dist_ema_alpha         (try 0.10)
+           → raise  approach_rate_threshold_on  (try 0.10–0.15)
+           → lower  dist_outlier_zscore    (try 1.5)
+
+       Buzz cuts out mid-approach (choppy)
+           → lower  rate_release_alpha     (try 0.05)
+           → lower  approach_rate_threshold_off (try 0.01)
+
+       Too slow to respond to genuine approaches
+           → raise  dist_ema_alpha         (try 0.35)
+           → raise  rate_attack_alpha      (try 0.75)
+           → lower  distance_window_secs   (try 0.15)
+
+       Buzz only starts when obstacle is very close
+           → lower  approach_rate_max      (try 0.4)
+           → lower  approach_rate_threshold_on (try 0.04)
+       ══════════════════════════════════════════════════════════════════ -->
+
+  <!-- ── Vest physical placement ──────────────────────────────────────────── -->
+  <arg name="vest_z_offset"     default="0.1"  doc="z of bottom tactor row (m), rel. base_link"/>
+  <arg name="vest_height"       default="1.0"  doc="vertical span of tactor panel (m)"/>
+  <arg name="vest_radius"       default="0.2"  doc="body radius — rays originate here (m)"/>
+
+  <!-- ── Sensing geometry ─────────────────────────────────────────────────── -->
+  <arg name="ray_range"         default="0.75"  doc="max obstacle sensing distance (m)"/>
+  <arg name="density_threshold" default="0.05" doc="normalised density [0-1] treated as obstacle"/>
+  <arg name="z_margin"          default="0.3"  doc="z half-band per tactor for hit filtering (m)"/>
+
+  <!-- ── Output scaling ───────────────────────────────────────────────────── -->
+  <!-- min_intensity: raise to widen the dead-band at very low approach rates -->
+  <arg name="min_intensity"     default="0.10" doc="approach intensities below this are silenced"/>
+  <arg name="intensity_scale"   default="1.0"  doc="global intensity multiplier [0-1]"/>
+
+  <!-- ── Timing ───────────────────────────────────────────────────────────── -->
+  <arg name="publish_rate"      default="20.0" doc="haptic + marker publish rate (Hz)"/>
+
+  <!-- ── Debug ────────────────────────────────────────────────────────────── -->
+  <arg name="debug_rays"        default="true" doc="publish ray markers to Foxglove"/>
+
+  <!-- ── Grid geometry — MUST match cylindrical_grid_viz params ───────────── -->
+  <arg name="grid_r_min"        default="0.33"/>
+  <arg name="grid_r_max"        default="2.5"/>
+  <arg name="grid_n_radial"     default="16"/>
+  <arg name="grid_n_angular"    default="9"/>
+  <arg name="grid_log_radial"   default="true"/>
+
+  <!-- ── Approach-rate core ───────────────────────────────────────────────── -->
+  <!-- approach_rate_max: closing speed (m/s) that maps to full intensity.
+       Lower this to make the vest more responsive to slow approaches.       -->
+  <arg name="approach_rate_max"       default="0.8"  doc="m/s → intensity 1.0"/>
+  <!-- distance_window_secs: OLS regression window for dD/dt estimate.
+       Longer = smoother slope but adds latency. Keep ≥ 3 sample periods.   -->
+  <arg name="distance_window_secs"    default="0.5"  doc="seconds of history used for slope fit"/>
+
+  <!-- ── Stage 1: Distance EMA ────────────────────────────────────────────── -->
+  <!-- PRIMARY steady-state fix. Lower = heavier smoothing = less false buzz.
+       Collapses shell-boundary oscillations before the derivative is taken.  -->
+  <arg name="dist_ema_alpha"          default="0.15" doc="0=heavy smooth 1=passthrough"/>
+
+  <!-- ── Stage 2: Outlier rejection ───────────────────────────────────────── -->
+  <!-- Clamps samples > zscore×IQR from median before OLS fit.
+       1.5 = aggressive rejection; 3.0 = conservative; 0 = disabled.         -->
+  <arg name="dist_outlier_zscore"     default="1.5"  doc="IQR multiplier for outlier clamping"/>
+
+  <!-- ── Stage 3: Asymmetric rate EMA ─────────────────────────────────────── -->
+  <!-- Attack fast so genuine approaches register quickly.
+       Release slow so the buzzer doesn't chop out between frames.           -->
+  <arg name="rate_attack_alpha"       default="0.6"  doc="fast rise EMA coefficient"/>
+  <arg name="rate_release_alpha"      default="0.08" doc="slow fall EMA coefficient"/>
+
+  <!-- ── Stage 4: Hysteretic noise gate ───────────────────────────────────── -->
+  <!-- threshold_on  > threshold_off prevents chattering at the boundary.
+       Wider gap = more hysteresis. Both in m/s approach rate.               -->
+  <arg name="approach_rate_threshold_on"  default="0.10" doc="gate opens above this (m/s)"/>
+  <arg name="approach_rate_threshold_off" default="0.03" doc="gate closes below this (m/s)"/>
+
+  <!-- ── Node ─────────────────────────────────────────────────────────────── -->
+  <node name="haptic_proximity_node"
+        pkg="hirolab_iona_demos"
+        type="haptic_proximity_node.py"
+        output="screen"
+        respawn="true"
+        respawn_delay="2.0">
+
+    <param name="frame_id"           value="base_link"/>
+
+    <!-- Vest placement -->
+    <param name="vest_z_offset"      value="$(arg vest_z_offset)"/>
+    <param name="vest_height"        value="$(arg vest_height)"/>
+    <param name="vest_radius"        value="$(arg vest_radius)"/>
+
+    <!-- Sensing geometry -->
+    <param name="ray_range"          value="$(arg ray_range)"/>
+    <param name="density_threshold"  value="$(arg density_threshold)"/>
+    <param name="z_margin"           value="$(arg z_margin)"/>
+
+    <!-- Output scaling -->
+    <param name="min_intensity"      value="$(arg min_intensity)"/>
+    <param name="intensity_scale"    value="$(arg intensity_scale)"/>
+
+    <!-- Timing -->
+    <param name="publish_rate"       value="$(arg publish_rate)"/>
+
+    <!-- Debug -->
+    <param name="debug_rays"         value="$(arg debug_rays)"/>
+
+    <!-- Grid geometry mirrors -->
+    <param name="grid_r_min"         value="$(arg grid_r_min)"/>
+    <param name="grid_r_max"         value="$(arg grid_r_max)"/>
+    <param name="grid_n_radial"      value="$(arg grid_n_radial)"/>
+    <param name="grid_n_angular"     value="$(arg grid_n_angular)"/>
+    <param name="grid_log_radial"    value="$(arg grid_log_radial)"/>
+
+    <!-- Approach-rate core -->
+    <param name="approach_rate_max"      value="$(arg approach_rate_max)"/>
+    <param name="distance_window_secs"   value="$(arg distance_window_secs)"/>
+
+    <!-- Stage 1: Distance EMA -->
+    <param name="dist_ema_alpha"         value="$(arg dist_ema_alpha)"/>
+
+    <!-- Stage 2: Outlier rejection -->
+    <param name="dist_outlier_zscore"    value="$(arg dist_outlier_zscore)"/>
+
+    <!-- Stage 3: Asymmetric rate EMA -->
+    <param name="rate_attack_alpha"      value="$(arg rate_attack_alpha)"/>
+    <param name="rate_release_alpha"     value="$(arg rate_release_alpha)"/>
+
+    <!-- Stage 4: Hysteretic noise gate -->
+    <param name="approach_rate_threshold_on"  value="$(arg approach_rate_threshold_on)"/>
+    <param name="approach_rate_threshold_off" value="$(arg approach_rate_threshold_off)"/>
+
+  </node>
+
+</launch>

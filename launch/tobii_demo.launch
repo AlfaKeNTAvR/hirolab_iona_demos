@@ -1,0 +1,10 @@
+<launch>
+    <node pkg="udp_ros" type="camera_streamer_node" name="camera_streamer_node_box" output="screen">
+        <param name="camera_name" value="box_camera" />
+        <param name="image_topic" value="/block_detector/image" />
+        <param name="fps" value="30" />
+        <param name="width" value="640" />
+        <param name="height" value="480" />
+        <param name="jpeg_quality" value="75" />
+    </node>
+</launch>

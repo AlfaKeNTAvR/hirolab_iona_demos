@@ -1,0 +1,83 @@
+<launch>
+  <!-- ══════════════════════════════════════════════════════════════════════
+       Cylindrical Occupancy Grid Node
+       ══════════════════════════════════════════════════════════════════════
+       Quick start:
+         roslaunch cylindrical_grid_viz cylindrical_grid.launch
+
+       Enable density visualisation:
+         roslaunch cylindrical_grid_viz cylindrical_grid.launch debug:=true
+
+       Foxglove 3D Pane setup (when debug:=true):
+         1. Add panel → 3D
+         2. Add → PointCloud → topic: /cylindrical_grid/density_cloud
+         3. "Color by" → intensity
+         4. Colormap → Turbo  (vivid blue→green→yellow→red)
+         5. Point size → 0.4 m  (voxel-blob size)
+         6. Decay time → 0  (node handles its own decay)
+         Also available for RViz:
+           Add → MarkerArray → /cylindrical_grid/density_markers
+       ══════════════════════════════════════════════════════════════════════ -->
+
+  <!-- Top-level arg so `debug:=true` can be passed on the command line -->
+  <arg name="debug"           default="true"/>
+
+  <!-- Grid shape overrides -->
+  <arg name="max_radius"      default="2.5"/>
+  <arg name="min_radius"      default="0.33"/>
+  <arg name="height"          default="2.0"/>
+  <arg name="z_offset"        default="0.15"/>
+  <arg name="n_radial"        default="16"/>
+  <arg name="n_angular"       default="9"/>
+  <arg name="n_vertical"      default="16"/>
+  <arg name="log_radial"      default="true"/>
+
+  <!-- Decay -->
+  <arg name="decay_rate"      default="0.95"/>
+  <arg name="decay_period_s"  default="0.01"/>
+
+  <!-- Timing -->
+  <arg name="discovery_rate"  default="2.0"/>
+  <arg name="publish_rate"    default="10.0"/>
+
+  <node name="cylindrical_grid_viz"
+        pkg="hirolab_iona_demos"
+        type="grid_viz_node"
+        output="screen">
+
+    <!-- Frame all grid geometry is expressed relative to -->
+    <param name="frame_id"         value="base_link"/>
+
+    <!-- Grid shape -->
+    <param name="max_radius"       value="$(arg max_radius)"/>
+    <param name="min_radius"       value="$(arg min_radius)"/>
+    <param name="height"           value="$(arg height)"/>
+    <param name="z_offset"         value="$(arg z_offset)"/>
+    <param name="n_radial"         value="$(arg n_radial)"/>
+    <param name="n_angular"        value="$(arg n_angular)"/>
+    <param name="n_vertical"       value="$(arg n_vertical)"/>
+    <param name="log_radial"       value="$(arg log_radial)"/>
+
+    <!-- Density decay: counts *= decay_rate  every decay_period_s seconds -->
+    <param name="decay_rate"       value="$(arg decay_rate)"/>
+    <param name="decay_period_s"   value="$(arg decay_period_s)"/>
+
+    <!-- Topic polling and output rate -->
+    <param name="discovery_rate"   value="$(arg discovery_rate)"/>
+    <param name="publish_rate"     value="$(arg publish_rate)"/>
+
+    <!-- Wireframe appearance -->
+    <param name="line_width"       value="0.02"/>
+    <param name="alpha"            value="0.6"/>
+
+    <!-- ── Debug visualisation ──────────────────────────────────────────
+         debug=true  →  publishes:
+           /cylindrical_grid/density_cloud    (PointCloud2, Foxglove primary)
+           /cylindrical_grid/density_markers  (MarkerArray, RViz fallback)
+         debug_min_density: voxels with normalised density below this value
+           are omitted from debug outputs (keeps the scene clean)          -->
+    <param name="debug"            value="$(arg debug)"/>
+    <param name="debug_min_density" value="0.01"/>
+
+  </node>
+</launch>

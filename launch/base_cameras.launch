@@ -1,0 +1,181 @@
+<launch>
+
+  <!-- ================================================================
+       Multi-RealSense Camera Launch File
+       Cameras:
+         front  - serial 244222076386  (D435i, horizontal, forward-facing)
+         left   - serial 244622072846  (D435,  yaw +90, tilt down ~30 deg)
+         right  - serial 827112071396  (D435,  yaw -90, tilt down ~30 deg)
+
+       Topics land at:
+         /front_camera/depth/color/points
+         /front_camera/color/image_raw
+         /front_camera/aligned_depth_to_color/image_raw
+         (same pattern for left_camera, right_camera)
+
+       TF frames:
+         front_camera_link, front_camera_color_frame, etc.
+         left_camera_link,  ...
+         right_camera_link, ...
+  ================================================================ -->
+
+
+  <!-- ============================================================
+       FRONT CAMERA  (serial: 244222076386)
+       Position: same as previous nav_camera_link setup.
+       Rotation: identity (faces forward).
+  ============================================================ -->
+<!-- 
+  <node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="front_camera_link_broadcaster"
+        args="-0.05 0.04 0.26 0 0 0 1 stand_link front_camera_link" />
+
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="serial_no"                  value="244222076386" />
+    <arg name="camera"                     value="front_camera" />
+    <arg name="tf_prefix"                  value="front_camera" />
+    <arg name="enable_depth"               value="true" />
+    <arg name="enable_color"               value="true" />
+    <arg name="enable_infra1"              value="false" />
+    <arg name="enable_infra2"              value="false" />
+    <arg name="enable_pointcloud"          value="true" />
+    <arg name="pointcloud_texture_stream"  value="RS2_STREAM_COLOR" />
+    <arg name="align_depth"               value="true" />
+    <arg name="depth_width"                value="640" />
+    <arg name="depth_height"               value="480" />
+    <arg name="depth_fps"                  value="15" />
+    <arg name="color_width"                value="640" />
+    <arg name="color_height"               value="480" />
+    <arg name="color_fps"                  value="15" />
+    <arg name="initial_reset"              value="true" />
+    <arg name="unite_imu_method"           value="none" />
+  </include>
+ -->
+
+  <!-- ============================================================
+       LEFT CAMERA  (serial: 244622072846)
+       Position: 15 cm left (+Y), 15 cm back (-X), 6 cm up (+Z)
+                 relative to stand_link.
+       Rotation : yaw +90 deg (face left) then pitch +30 deg (tilt down)
+                  Combined quaternion: qx=-0.1830 qy=0.1830 qz=0.6830 qw=0.6830
+  ============================================================ -->
+
+<node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="front_camera_link_broadcaster"
+        args="-0.05 0.04 0.26 0 0 0 1 stand_link front_camera_link" />
+
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="serial_no"                  value="244222076386" />
+    <arg name="camera"                     value="front_camera" />
+    <arg name="tf_prefix"                  value="front_camera" />
+    <arg name="enable_depth"               value="true" />
+    <arg name="enable_color"               value="true" />
+    <arg name="enable_infra1"              value="false" />
+    <arg name="enable_infra2"              value="false" />
+    <arg name="enable_pointcloud"          value="true" />
+    <arg name="pointcloud_texture_stream"  value="RS2_STREAM_COLOR" />
+    <arg name="align_depth"               value="true" />
+    <arg name="depth_width"                value="640" />
+    <arg name="depth_height"               value="480" />
+    <arg name="depth_fps"                  value="15" />
+    <arg name="color_width"                value="640" />
+    <arg name="color_height"               value="480" />
+    <arg name="color_fps"                  value="15" />
+    <arg name="initial_reset"              value="true" />
+    <arg name="unite_imu_method"           value="none" />
+  </include>
+
+
+
+
+  <node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="left_camera_link_broadcaster"
+        args="-0.15 0.15 0.34  0.8 0.52355 0.0  stand_link left_camera_link" />
+
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="serial_no"                  value="244622072846" />
+    <arg name="camera"                     value="left_camera" />
+    <arg name="tf_prefix"                  value="left_camera" />
+    <arg name="enable_depth"               value="true" />
+    <arg name="enable_color"               value="true" />
+    <arg name="enable_infra1"              value="false" />
+    <arg name="enable_infra2"              value="false" />
+    <arg name="enable_pointcloud"          value="true" />
+    <arg name="pointcloud_texture_stream"  value="RS2_STREAM_COLOR" />
+    <arg name="align_depth"               value="true" />
+    <arg name="depth_width"                value="640" />
+    <arg name="depth_height"               value="480" />
+    <arg name="depth_fps"                  value="15" />
+    <arg name="color_width"                value="640" />
+    <arg name="color_height"               value="480" />
+    <arg name="color_fps"                  value="15" />
+    <arg name="initial_reset"              value="true" />
+    <arg name="unite_imu_method"           value="none" />
+  </include>
+
+
+    <node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="right_camera_link_broadcaster"
+      args="-0.15 -0.15 0.34  -0.8 0.52355 0.0  stand_link right_camera_link" />
+
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="serial_no"                  value="827112071396" />
+    <arg name="camera"                     value="right_camera" />
+    <arg name="tf_prefix"                  value="right_camera" />
+    <arg name="enable_depth"               value="true" />
+    <arg name="enable_color"               value="true" />
+    <arg name="enable_infra1"              value="false" />
+    <arg name="enable_infra2"              value="false" />
+    <arg name="enable_pointcloud"          value="true" />
+    <arg name="pointcloud_texture_stream"  value="RS2_STREAM_COLOR" />
+    <arg name="align_depth"               value="true" />
+    <arg name="depth_width"                value="640" />
+    <arg name="depth_height"               value="480" />
+    <arg name="depth_fps"                  value="15" />
+    <arg name="color_width"                value="640" />
+    <arg name="color_height"               value="480" />
+    <arg name="color_fps"                  value="15" />
+    <arg name="initial_reset"              value="true" />
+    <arg name="unite_imu_method"           value="none" />
+  </include>
+
+
+  <!-- ============================================================
+       RIGHT CAMERA  (serial: 827112071396)
+       Position: 15 cm right (-Y), 15 cm back (-X), 6 cm up (+Z)
+                 relative to stand_link.
+       Rotation : yaw -90 deg (face right) then pitch +30 deg (tilt down)
+                  Combined quaternion: qx=0.1830 qy=0.1830 qz=-0.6830 qw=0.6830
+  ============================================================ -->
+<!-- 
+  <node pkg="tf2_ros"
+        type="static_transform_publisher"
+        name="right_camera_link_broadcaster"
+        args="-0.15 -0.15 0.06  0.1830 0.1830 -0.6830 0.6830 stand_link right_camera_link" />
+
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="serial_no"                  value="827112071396" />
+    <arg name="camera"                     value="right_camera" />
+    <arg name="tf_prefix"                  value="right_camera" />
+    <arg name="enable_depth"               value="true" />
+    <arg name="enable_color"               value="true" />
+    <arg name="enable_infra1"              value="false" />
+    <arg name="enable_infra2"              value="false" />
+    <arg name="enable_pointcloud"          value="true" />
+    <arg name="pointcloud_texture_stream"  value="RS2_STREAM_COLOR" />
+    <arg name="align_depth"               value="true" />
+    <arg name="depth_width"                value="640" />
+    <arg name="depth_height"               value="480" />
+    <arg name="depth_fps"                  value="15" />
+    <arg name="color_width"                value="640" />
+    <arg name="color_height"               value="480" />
+    <arg name="color_fps"                  value="15" />
+    <arg name="initial_reset"              value="true" />
+    <arg name="unite_imu_method"           value="none" />
+  </include> -->
+
+</launch>

@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- ============================ SETTINGS ============================= -->
+
+
+    <!-- If any of dependency or optional subfiles should not be launched (or
+    are launched separately) set corresponding argument to "false". -->
+    <arg 
+    name="right_arm_launch" 
+    default="true"/>
+
+    <arg 
+    name="left_arm_launch" 
+    default="true"/>
+
+    <!-- ======================== END OF SETTINGS ========================== -->
+
+    <!-- Right Arm: -->
+    <group if="$(arg right_arm_launch)">
+        <include file="$(find kortex_driver)/launch/kortex_driver.launch">
+            <arg name="ip_address" value="192.168.1.10" />
+            <arg name="start_rviz" value="false" />
+            <arg name="start_moveit" value="true" />
+            <arg name="gripper" value="robotiq_2f_85" />
+            <arg name="robot_name" value="right_arm" />
+            <arg name="cyclic_data_publish_rate" value="100" />
+            <arg name="prefix" value="right_arm/" />
+        </include>
+    </group>
+
+    <!-- Left Arm: -->
+    <group if="$(arg left_arm_launch)">
+        <include file="$(find kortex_driver)/launch/kortex_driver.launch">
+            <arg name="ip_address" value="192.168.1.11" />
+            <arg name="start_rviz" value="false" />
+            <arg name="start_moveit" value="true" />
+            <arg name="gripper" value="robotiq_2f_85" />
+            <arg name="robot_name" value="left_arm" />
+            <arg name="cyclic_data_publish_rate" value="100" />
+            <arg name="prefix" value="left_arm/" />
+        </include>
+    </group>
+
+    <!-- Launch the UDP Streamer: -->
+<node pkg="udp_ros" type="camera_streamer_node" name="camera_streamer_node_neck" output="screen">
+    <param name="camera_name" value="active_neck" />
+    <param name="image_topic" value="/active_neck/color/image_raw" />
+    <param name="fps" value="30" />
+    <param name="width" value="640" />
+    <param name="height" value="480" />
+    <param name="jpeg_quality" value="75" />
+</node>
+
+    
+    <!-- Launch the UDP Streamer: -->
+<node pkg="udp_ros" type="camera_streamer_node" name="camera_streamer_node_laser" output="screen">
+    <param name="camera_name" value="top_down_laser" />
+    <param name="image_topic" value="/topdown_laser/image" />
+    <param name="fps" value="30" />
+    <param name="width" value="640" />
+    <param name="height" value="480" />
+    <param name="jpeg_quality" value="75" />
+</node>
+
+<!-- <include file="$(find rviz_camera_stream)/launch/top_down.launch"> -->
+    <!-- optional arguments passed to the included file -->
+    <!-- <arg name="use_rviz" value="true"/> -->
+<!-- </include> -->
+
+</launch>
