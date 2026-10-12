@@ -42,11 +42,29 @@
     </group>
 
     <!-- Launch the UDP Streamer: -->
-    <node pkg="udp_ros" type="camera_streamer_node" name="camera_streamer_node_neck" output="screen">
-        <param name="camera_name" value="active_neck" />
-        <param name="fps" value="30" />
-        <param name="width" value="640" />
-        <param name="height" value="480" />
-        <param name="jpeg_quality" value="75" />
-    </node>
+<node pkg="udp_ros" type="camera_streamer_node" name="camera_streamer_node_neck" output="screen">
+    <param name="camera_name" value="active_neck" />
+    <param name="image_topic" value="/active_neck/color/image_raw" />
+    <param name="fps" value="30" />
+    <param name="width" value="640" />
+    <param name="height" value="480" />
+    <param name="jpeg_quality" value="75" />
+</node>
+
+    
+    <!-- Launch the UDP Streamer: -->
+<node pkg="udp_ros" type="camera_streamer_node" name="camera_streamer_node_laser" output="screen">
+    <param name="camera_name" value="top_down_laser" />
+    <param name="image_topic" value="/topdown_laser/image" />
+    <param name="fps" value="30" />
+    <param name="width" value="640" />
+    <param name="height" value="480" />
+    <param name="jpeg_quality" value="75" />
+</node>
+
+<!-- <include file="$(find rviz_camera_stream)/launch/top_down.launch"> -->
+    <!-- optional arguments passed to the included file -->
+    <!-- <arg name="use_rviz" value="true"/> -->
+<!-- </include> -->
+
 </launch>
