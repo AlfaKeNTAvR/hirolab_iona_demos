@@ -16,13 +16,22 @@
     <!-- ======================== END OF SETTINGS ========================== -->
 
 
+    <!-- ==================== CONTROLLERS ==================== -->
+    <!-- Oculus controller feedback (buttons, pose, joystick topics).
+         Always launched, independent of the arm switches: mapping_player
+         drives the base from the right joystick and the chest from the left
+         joystick, so disabling an arm must not take its controller with it. -->
+    <include file="$(find oculus_ros)/launch/controller_feedback.launch">
+        <arg name="controller_side" value="right"/>
+    </include>
+
+    <include file="$(find oculus_ros)/launch/controller_feedback.launch">
+        <arg name="controller_side" value="left"/>
+    </include>
+
+
     <!-- ==================== RIGHT ARM ==================== -->
     <group if="$(arg right_arm_launch)">
-
-        <!-- Oculus controller feedback (buttons, pose, joystick topics) -->
-        <include file="$(find oculus_ros)/launch/controller_feedback.launch">
-            <arg name="controller_side" value="right"/>
-        </include>
 
         <!-- Service-driven teleoperation node -->
         <include file="$(find kinova_positional_control)/launch/teleoperation_service.launch">
@@ -44,11 +53,6 @@
 
     <!-- ==================== LEFT ARM ==================== -->
     <group if="$(arg left_arm_launch)">
-
-        <!-- Oculus controller feedback (buttons, pose, joystick topics) -->
-        <include file="$(find oculus_ros)/launch/controller_feedback.launch">
-            <arg name="controller_side" value="left"/>
-        </include>
 
         <!-- Service-driven teleoperation node -->
         <include file="$(find kinova_positional_control)/launch/teleoperation_service.launch">
